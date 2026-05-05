@@ -1,0 +1,32 @@
+# cronwatch example configuration
+# Copy this file to cronwatch.yaml and adjust to your environment.
+
+# Log verbosity: debug | info | warn | error
+log_level: info
+
+# Alert destinations — at least one should be configured.
+alert:
+  # Send failure notifications to this email address.
+  email: ""
+  # POST a JSON payload to this URL on failure.
+  webhook: ""
+
+# List of cron jobs to monitor.
+jobs:
+  - name: nightly-backup
+    # Standard cron expression (minute hour dom month dow)
+    schedule: "0 2 * * *"
+    # Maximum allowed runtime before the job is considered hung.
+    timeout: 1h
+    # Shell command that cronwatch will execute and monitor.
+    command: /usr/local/bin/backup.sh --full
+
+  - name: log-rotation
+    schedule: "0 0 * * 0"
+    timeout: 15m
+    command: /usr/sbin/logrotate /etc/logrotate.conf
+
+  - name: health-check
+    schedule: "*/5 * * * *"
+    timeout: 30s
+    command: /usr/local/bin/healthcheck.sh
