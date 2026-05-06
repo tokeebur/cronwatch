@@ -16,6 +16,11 @@ type Result struct {
 	Err      error
 }
 
+// Success reports whether the job completed without error and with a zero exit code.
+func (r Result) Success() bool {
+	return r.Err == nil && r.ExitCode == 0
+}
+
 // Runner executes shell commands and returns results.
 type Runner struct {
 	Timeout time.Duration
