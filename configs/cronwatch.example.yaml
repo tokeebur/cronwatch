@@ -10,6 +10,8 @@ alert:
   email: ""
   # POST a JSON payload to this URL on failure.
   webhook: ""
+  # Number of consecutive failures before an alert is sent (default: 1).
+  alert_threshold: 1
 
 # List of cron jobs to monitor.
 jobs:
@@ -20,6 +22,8 @@ jobs:
     timeout: 1h
     # Shell command that cronwatch will execute and monitor.
     command: /usr/local/bin/backup.sh --full
+    # Override the global alert threshold for this job.
+    alert_threshold: 1
 
   - name: log-rotation
     schedule: "0 0 * * 0"
@@ -30,3 +34,5 @@ jobs:
     schedule: "*/5 * * * *"
     timeout: 30s
     command: /usr/local/bin/healthcheck.sh
+    # Only alert after 3 consecutive failures to reduce noise for flaky checks.
+    alert_threshold: 3
