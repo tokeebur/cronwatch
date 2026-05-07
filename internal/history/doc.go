@@ -1,15 +1,12 @@
-// Package history provides a lightweight, file-backed store for recording
-// cron job execution results. Entries are persisted as a JSON array so they
-// survive process restarts and can be inspected with standard tooling.
+// Package history records the execution history of cron jobs managed by
+// cronwatch. Each job run is stored as an Entry containing timing information,
+// exit status, and captured output.
 //
-// Typical usage:
+// The Store type persists entries to a JSON file on disk so that history
+// survives daemon restarts. Use New to create a Store backed by a given
+// directory.
 //
-//	store, err := history.New("/var/lib/cronwatch/history.json")
-//	if err != nil { ... }
-//
-//	store.Record(history.Entry{
-//	    JobName:  "daily-backup",
-//	    ExitCode: result.ExitCode,
-//	    Duration: result.Duration,
-//	})
+// The Cleaner type provides a Prune method that removes entries older than a
+// configurable retention duration, keeping the on-disk store from growing
+// without bound.
 package history
