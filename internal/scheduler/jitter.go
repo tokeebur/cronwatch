@@ -65,3 +65,10 @@ func JitterFromJob(job config.Job) time.Duration {
 func NewJitterRunnerForJob(inner Runner, job config.Job) *JitterRunner {
 	return NewJitterRunner(inner, JitterFromJob(job))
 }
+
+// MaxJitter returns the maximum jitter duration configured for this runner.
+// This is useful for logging or introspection without exposing the field
+// directly.
+func (j *JitterRunner) MaxJitter() time.Duration {
+	return j.maxJitter
+}
