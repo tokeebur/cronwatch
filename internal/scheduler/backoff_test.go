@@ -68,6 +68,21 @@ func TestBackoffPolicy_NegativeAttemptTreatedAsZero(t *testing.T) {
 	}
 }
 
+// TestBackoffPolicy_UnknownStrategyFallback verifies that an unrecognized
+// strategy falls back to the fixed delay behavior rather than panicking.
+func TestBackoffPolicy_UnknownStrategyFallback(t *testing.T) {
+	p := BackoffPolicy{
+		Strategy:  "unknown",
+		BaseDelay: 3 * time.Second,
+		MaxDelay:  0,
+	}
+	for attempt := 0; attempt < 3; attempt++ {
+		if got := p.Delay(attempt); got != 3*time.Second {
+			t.Errorf("attempt %d: unknown strategy should fall back to fixed, got %v", attempt, got)
+		}
+	}
+}
+
 func TestBackoffFromJob_Defaults(t *testing.T) {
 	p := BackoffFromJob(map[string]string{})
 	def := DefaultBackoffPolicy()
