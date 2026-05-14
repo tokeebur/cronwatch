@@ -38,14 +38,14 @@ func TestRetryRunner_RetriesOnFailure(t *testing.T) {
 
 func TestRetryRunner_StopsAfterMaxAttempts(t *testing.T) {
 	r := newRunner(t)
-	attempts := 0
-	// Use a script that counts via a temp file would be complex; verify via timing.
-	// Instead confirm MaxAttempts=1 means no retry.
+	// MaxAttempts=1 means no retry: the job runs exactly once and fails.
 	rr := NewRetryRunner(r, RetryPolicy{MaxAttempts: 1, Delay: 0})
-	_ = attempts
 	result := rr.Run(context.Background(), "fail", "exit 2", 5*time.Second)
 	if result.ExitCode == 0 {
 		t.Fatal("expected failure")
+	}
+	if result.Attempts != 1 {
+		t.Fatalf("expected 1 attempt, got %d", result.Attempts)
 	}
 }
 
@@ -72,5 +72,15 @@ func TestRetryRunner_DefaultMinAttempts(t *testing.T) {
 	result := rr.Run(context.Background(), "ok", "echo hi", 5*time.Second)
 	if result.ExitCode != 0 {
 		t.Fatalf("expected success, got exit %d", result.ExitCode)
+	}
+}
+
+func TestRetryRunner_AttemptsCountMatchesMaxAttempts(t *testing.T) {
+	r := newRunner(t)
+	const maxAttempts = 3
+	rr := NewRetryRunner(r, RetryPolicy{MaxAttempts: maxAttempts, Delay: 0})
+	result := rr.Run(context.Background(), "fail", "exit 1", 5*time.Second)
+	if result.Attempts != maxAttempts {
+		t.Fatalf("expected %d attempts, got %d", maxAttempts, result.Attempts)
 	}
 }
