@@ -1,31 +1,41 @@
 package scheduler
 
 import (
-	"fmt"
-	"time"
+	"strconv"
 
-	"github.com/cronwatch/internal/config"
+	"github.com/yourorg/cronwatch/internal/config"
 )
 
-// RetryPolicyFromJob builds a RetryPolicy from a job's config.
-// It returns a default single-attempt policy when no retry config is present.
-func RetryPolicyFromJob(job config.Job) (RetryPolicy, error) {
-	if job.Retry == nil {
-		return RetryPolicy{MaxAttempts: 1, Delay: 0}, nil
+// RetryPolicy holds retry configuration derived from a job definition.
+type RetryPolicy struct {
+	MaxAttempts int
+	Backoff     BackoffPolicy
+}
+
+// RetryPolicyFromJob builds a RetryPolicy from a job's Options map.
+// Supported keys:
+//
+//	max_attempts      – total attempts including the first (default: 1, no retry)
+//	backoff_strategy  – fixed | linear | exponential (default: exponential)
+//	backoff_base      – duration string for base delay  (default: 1s)
+//	backoff_max       – duration string for max delay   (default: 5m)
+func RetryPolicyFromJob(job config.Job) RetryPolicy {
+	policy := RetryPolicy{
+		MaxAttempts: 1,
+		Backoff:     DefaultBackoffPolicy(),
 	}
 
-	max := job.Retry.MaxAttempts
-	if max < 1 {
-		return RetryPolicy{}, fmt.Errorf("job %q: retry.max_attempts must be >= 1, got %d", job.Name, max)
+	if job.Options == nil {
+		return policy
 	}
 
-	delay, err := time.ParseDuration(job.Retry.Delay)
-	if err != nil {
-		return RetryPolicy{}, fmt.Errorf("job %q: invalid retry.delay %q: %w", job.Name, job.Retry.Delay, err)
+	if v, ok := job.Options["max_attempts"]; ok {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			policy.MaxAttempts = n
+		}
 	}
 
-	return RetryPolicy{
-		MaxAttempts: max,
-		Delay:       delay,
-	}, nil
+	policy.Backoff = BackoffFromJob(job.Options)
+
+	return policy
 }
