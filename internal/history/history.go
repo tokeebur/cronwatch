@@ -69,6 +69,20 @@ func (s *Store) All() []Entry {
 	return out
 }
 
+// ForJob returns a copy of all recorded entries for the given job name,
+// in chronological order.
+func (s *Store) ForJob(jobName string) []Entry {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	var out []Entry
+	for _, e := range s.entries {
+		if e.JobName == jobName {
+			out = append(out, e)
+		}
+	}
+	return out
+}
+
 func (s *Store) flush() error {
 	data, err := json.MarshalIndent(s.entries, "", "  ")
 	if err != nil {
