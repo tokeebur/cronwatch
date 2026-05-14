@@ -52,5 +52,7 @@ func (rr *RetryRunner) Run(ctx context.Context, jobName, command string, timeout
 			}
 		}
 	}
+	log.Printf("[cronwatch] job %q failed after %d/%d attempts (exit %d)",
+		jobName, rr.policy.MaxAttempts, rr.policy.MaxAttempts, result.ExitCode)
 	return result
 }
