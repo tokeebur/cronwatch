@@ -1,6 +1,7 @@
 package scheduler
 
 import (
+	"context"
 	"math/rand"
 	"time"
 
@@ -11,9 +12,9 @@ import (
 // This helps spread out concurrent job starts when many jobs share the same
 // cron schedule (e.g. every hour on the hour).
 type JitterRunner struct {
-	inner  Runner
+	inner     Runner
 	maxJitter time.Duration
-	rng    *rand.Rand
+	rng       *rand.Rand
 }
 
 // NewJitterRunner creates a JitterRunner that delays up to maxJitter before
@@ -56,4 +57,11 @@ func JitterFromJob(job config.Job) time.Duration {
 		return 0
 	}
 	return d
+}
+
+// NewJitterRunnerForJob is a convenience constructor that reads the jitter
+// setting directly from a job definition and wraps the provided inner Runner.
+// It is equivalent to calling NewJitterRunner(inner, JitterFromJob(job)).
+func NewJitterRunnerForJob(inner Runner, job config.Job) *JitterRunner {
+	return NewJitterRunner(inner, JitterFromJob(job))
 }
