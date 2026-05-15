@@ -3,6 +3,7 @@ package scheduler
 import (
 	"context"
 	"math/rand"
+	"sync"
 	"time"
 
 	"github.com/your-org/cronwatch/internal/config"
@@ -15,6 +16,7 @@ type JitterRunner struct {
 	inner     Runner
 	maxJitter time.Duration
 	rng       *rand.Rand
+	mu        sync.Mutex // protects rng for concurrent Run calls
 }
 
 // NewJitterRunner creates a JitterRunner that delays up to maxJitter before
@@ -33,7 +35,9 @@ func NewJitterRunner(inner Runner, maxJitter time.Duration) *JitterRunner {
 // during the jitter sleep the result reflects that cancellation.
 func (j *JitterRunner) Run(ctx context.Context, job config.Job) Result {
 	if j.maxJitter > 0 {
+		j.mu.Lock()
 		delay := time.Duration(j.rng.Int63n(int64(j.maxJitter)))
+		j.mu.Unlock()
 		select {
 		case <-time.After(delay):
 		case <-ctx.Done():
